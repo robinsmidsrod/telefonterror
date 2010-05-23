@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, Main!</string>
-    <string name="app_name">TelefonTerror.no</string>
+	<string name="empty_call_log">Your call log is empty!</string>
+	<string name="blacklist_last_updated_label">Blacklist last updated:</string>
+	<string name="blacklist_never_updated">never</string>
+	<string name="update_blacklist_button">Update blacklist</string>
+	<string name="view_call_log_button">View call log</string>
+	<string name="main_title">TelefonTerror.no</string>
+	<string name="app_name">TelefonTerror.no</string>
+<string name="updating_blacklist">updating...</string>
 </resources>
