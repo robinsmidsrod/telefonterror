@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="no.smidsrod.robin.telefonterror" android:versionCode="1"
 	android:versionName="1.0">
-	<application android:icon="@drawable/icon" android:label="@string/app_name">
+	<application android:icon="@drawable/icon" android:label="@string/app_name"
+		android:debuggable="true">
 		<activity android:name=".Main" android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
@@ -11,10 +12,13 @@
 		</activity>
 
 		<activity android:name=".CallList"></activity>
+		<provider android:authorities="no.smidsrod.robin.telefonterror.blacklist"
+			android:name=".blacklist.Blacklist"></provider>
 	</application>
 	<uses-sdk android:minSdkVersion="3" />
 
 	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
 	<uses-permission android:name="android.permission.READ_CONTACTS"></uses-permission>
 	<uses-permission android:name="android.permission.READ_LOGS"></uses-permission>
+
 </manifest> 

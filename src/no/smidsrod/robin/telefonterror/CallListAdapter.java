@@ -2,6 +2,9 @@ package no.smidsrod.robin.telefonterror;
 
 import java.util.Calendar;
 
+import no.smidsrod.robin.telefonterror.blacklist.Blacklist;
+
+import android.app.ListActivity;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.CallLog;
@@ -23,6 +26,7 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 	// R.layout.call_log_item, callers, FROM_CALLS, TO_CALLS);
 
 	private LayoutInflater inflater;
+	private ListActivity context;
 
 	private int typeIndex;
 	private int timeIndex;
@@ -46,6 +50,7 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 	}
 
 	private void init(Context context, Cursor c) {
+		this.context = (ListActivity) context;
 		inflater = LayoutInflater.from(context);
 
 		typeIndex = c.getColumnIndex(CallLog.Calls.TYPE);
@@ -60,6 +65,11 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 
 		unknownNumber = context.getResources().getString(
 				R.string.unknown_number);
+	}
+
+	@Override
+	public View newView(Context context, Cursor cursor, ViewGroup parent) {
+		return inflater.inflate(R.layout.call_log_item, null);
 	}
 
 	@Override
@@ -81,10 +91,10 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 		numberView.setText(calcNumberText(number));
 		nameView.setText(calcNameText(name));
 
-		if (calcNameText(name) != null && calcNameText(name).length() > 0) {
+		if (name != null && name.length() > 0) {
 			layout.setBackgroundColor(goodColor);
 		} else {
-			if (isBadNumber(calcNameText(number))) {
+			if (isBadNumber(number)) {
 				layout.setBackgroundColor(badColor);
 			} else {
 				layout.setBackgroundColor(unknownColor);
@@ -93,15 +103,15 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 
 	}
 
+	private String calcNameText(String name) {
+		return name;
+	}
+
 	private String calcNumberText(String number) {
 		if (number.equals("-1")) {
 			return "<" + unknownNumber + ">";
 		}
 		return number;
-	}
-
-	private String calcNameText(String name) {
-		return name;
 	}
 
 	private String calcTimeText(long time) {
@@ -122,7 +132,7 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 					+ pad(date.get(Calendar.MINUTE));
 		}
 
-		return calcNameText(formatted);
+		return formatted;
 	}
 
 	private String pad(int i) {
@@ -139,12 +149,35 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 		long oneDay = 24 * 60 * 60 * 1000;
 		long difference = Math.abs(now.getTimeInMillis()
 				- date.getTimeInMillis());
-		Main.debug("Difference: " + difference);
 		return difference > oneDay;
 	}
 
 	private boolean isBadNumber(String number) {
-		// TODO Auto-generated method stub
+
+		// Setup query parameters
+		String[] projection = { Blacklist._ID, Blacklist.NAME,
+				Blacklist.CATEGORY };
+		String selection = Blacklist.NUMBER + " LIKE '%" + number + "'";
+		String[] selectionArgs = null;
+		String sortOrder = null;
+
+		// Check public blacklist
+		Cursor cPublic = context.managedQuery(Blacklist.PUBLIC_CONTENT_URI,
+				projection, selection, selectionArgs, sortOrder);
+		cPublic.moveToFirst();
+		if (cPublic.getCount() > 0) {
+			return true;
+		}
+
+		// Check private blacklist
+		Cursor cPrivate = context.managedQuery(Blacklist.PRIVATE_CONTENT_URI,
+				projection, selection, selectionArgs, sortOrder);
+		cPrivate.moveToFirst();
+		if (cPrivate.getCount() > 0) {
+			return true;
+		}
+
+		// not found
 		return false;
 	}
 
@@ -159,11 +192,6 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 		default:
 			return "U";
 		}
-	}
-
-	@Override
-	public View newView(Context context, Cursor cursor, ViewGroup parent) {
-		return inflater.inflate(R.layout.call_log_item, null);
 	}
 
 }

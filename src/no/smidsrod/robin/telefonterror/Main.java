@@ -3,8 +3,12 @@ package no.smidsrod.robin.telefonterror;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import no.smidsrod.robin.telefonterror.blacklist.Blacklist;
+
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -21,7 +25,7 @@ public class Main extends Activity implements OnClickListener {
 	private Button updateBlacklistButton;
 	private TextView lastUpdatedText;
 
-	static void debug(String string) {
+	public static void debug(String string) {
 		Log.d(APP_NAME, string);
 	}
 
@@ -66,10 +70,7 @@ public class Main extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				// do something (in another thread)
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-				}
+				doUpdateBlacklist();
 				// publish results in GUI thread
 				uiThread.post(new Runnable() {
 					@Override
@@ -79,8 +80,20 @@ public class Main extends Activity implements OnClickListener {
 					}
 				});
 			}
+
 		};
 		updateThread.execute(updateTask);
+	}
+
+	private void doUpdateBlacklist() {
+		// ContentValues values = new ContentValues();
+		// values.put(Blacklist.NUMBER, "33301443");
+		// values.put(Blacklist.CATEGORY, "Butikk");
+		// values.put(Blacklist.URL, "http://www.expert.no");
+		// values.put(Blacklist.NAME, "Expert Tønsberg");
+		// Uri newUri =
+		// getContentResolver().insert(Blacklist.PRIVATE_CONTENT_URI, values);
+		// Main.debug("URI inserted: " + newUri);
 	}
 
 }
