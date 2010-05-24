@@ -179,11 +179,11 @@ public class Blacklist extends ContentProvider {
 		}
 		if (uriMatcher.match(uri) == MATCH_PRIVATE_TABLE) {
 			db = privateBlacklist.getReadableDatabase();
-			tableName = PUBLIC_TABLE_NAME;
+			tableName = PRIVATE_TABLE_NAME;
 		}
 		if (uriMatcher.match(uri) == MATCH_PUBLIC_ID) {
 			db = publicBlacklist.getReadableDatabase();
-			tableName = PRIVATE_TABLE_NAME;
+			tableName = PUBLIC_TABLE_NAME;
 			long id = Long.parseLong(uri.getPathSegments().get(1));
 			selection = appendRowId(selection, id);
 		}
@@ -195,8 +195,10 @@ public class Blacklist extends ContentProvider {
 		}
 
 		if (db != null && tableName != null) {
+			String having = null;
+			String groupBy = null;
 			Cursor cursor = db.query(tableName, projection, selection,
-					selectionArgs, null, null, sortOrder);
+					selectionArgs, groupBy, having, sortOrder);
 			cursor.setNotificationUri(getContext().getContentResolver(), uri);
 			return cursor;
 		}

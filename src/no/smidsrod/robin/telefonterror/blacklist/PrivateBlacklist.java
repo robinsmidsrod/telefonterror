@@ -15,7 +15,7 @@ class PrivateBlacklist extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		String sql = "";
-		sql += "CREATE TABLE " + Blacklist.PRIVATE_TABLE_NAME;
+		sql += "CREATE TABLE IF NOT EXISTS " + Blacklist.PRIVATE_TABLE_NAME;
 		sql += "(";
 		sql += Blacklist._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,";
 		sql += Blacklist.NUMBER + " TEXT NOT NULL,";

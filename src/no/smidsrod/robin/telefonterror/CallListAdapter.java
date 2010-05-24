@@ -3,8 +3,8 @@ package no.smidsrod.robin.telefonterror;
 import java.util.Calendar;
 
 import no.smidsrod.robin.telefonterror.blacklist.Blacklist;
-
-import android.app.ListActivity;
+import no.smidsrod.robin.telefonterror.blacklist.BlacklistItem;
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.CallLog;
@@ -26,7 +26,7 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 	// R.layout.call_log_item, callers, FROM_CALLS, TO_CALLS);
 
 	private LayoutInflater inflater;
-	private ListActivity context;
+	private Activity activity;
 
 	private int typeIndex;
 	private int timeIndex;
@@ -38,6 +38,8 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 	private int badColor;
 
 	private String unknownNumber;
+	private BlacklistItem itemPublic;
+	private BlacklistItem itemPrivate;
 
 	public CallListAdapter(Context context, Cursor c) {
 		super(context, c);
@@ -50,7 +52,7 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 	}
 
 	private void init(Context context, Cursor c) {
-		this.context = (ListActivity) context;
+		this.activity = (Activity) context;
 		inflater = LayoutInflater.from(context);
 
 		typeIndex = c.getColumnIndex(CallLog.Calls.TYPE);
@@ -86,7 +88,12 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 		String number = cursor.getString(numberIndex);
 		String name = cursor.getString(nameIndex);
 
-		typeView.setText(calcTypeText(type));
+		itemPublic = BlacklistItem.getByNumber(activity,
+				Blacklist.PUBLIC_CONTENT_URI, number);
+		itemPrivate = BlacklistItem.getByNumber(activity,
+				Blacklist.PRIVATE_CONTENT_URI, number);
+
+		typeView.setText(appendCategory(calcTypeText(type)));
 		timeView.setText(calcTimeText(time));
 		numberView.setText(calcNumberText(number));
 		nameView.setText(calcNameText(name));
@@ -94,7 +101,7 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 		if (name != null && name.length() > 0) {
 			layout.setBackgroundColor(goodColor);
 		} else {
-			if (isBadNumber(number)) {
+			if (isBadNumber()) {
 				layout.setBackgroundColor(badColor);
 			} else {
 				layout.setBackgroundColor(unknownColor);
@@ -103,15 +110,34 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 
 	}
 
-	private String calcNameText(String name) {
-		return name;
+	private boolean isBadNumber() {
+		if (itemPrivate != null || itemPublic != null) {
+			return true;
+		}
+		return false;
 	}
 
-	private String calcNumberText(String number) {
-		if (number.equals("-1")) {
-			return "<" + unknownNumber + ">";
+	private String calcTypeText(int callLogType) {
+		switch (callLogType) {
+		case CallLog.Calls.INCOMING_TYPE:
+			return "I";
+		case CallLog.Calls.MISSED_TYPE:
+			return "M";
+		case CallLog.Calls.OUTGOING_TYPE:
+			return "O";
+		default:
+			return "U";
 		}
-		return number;
+	}
+
+	private String appendCategory(String type) {
+		if (itemPublic != null) {
+			return type + ": " + itemPublic.getCategory();
+		}
+		if (itemPrivate != null) {
+			return type + ": " + itemPrivate.getCategory();
+		}
+		return type;
 	}
 
 	private String calcTimeText(long time) {
@@ -135,6 +161,23 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 		return formatted;
 	}
 
+	private String calcNumberText(String number) {
+		if (number.equals("-1")) {
+			return "<" + unknownNumber + ">";
+		}
+		return number;
+	}
+
+	private String calcNameText(String name) {
+		if (itemPrivate != null) {
+			return itemPrivate.getName();
+		}
+		if (itemPublic != null) {
+			return itemPublic.getName();
+		}
+		return name;
+	}
+
 	private String pad(int i) {
 		if (i <= 0) {
 			return "00";
@@ -150,48 +193,6 @@ public class CallListAdapter extends CursorAdapter implements ListAdapter {
 		long difference = Math.abs(now.getTimeInMillis()
 				- date.getTimeInMillis());
 		return difference > oneDay;
-	}
-
-	private boolean isBadNumber(String number) {
-
-		// Setup query parameters
-		String[] projection = { Blacklist._ID, Blacklist.NAME,
-				Blacklist.CATEGORY };
-		String selection = Blacklist.NUMBER + " LIKE '%" + number + "'";
-		String[] selectionArgs = null;
-		String sortOrder = null;
-
-		// Check public blacklist
-		Cursor cPublic = context.managedQuery(Blacklist.PUBLIC_CONTENT_URI,
-				projection, selection, selectionArgs, sortOrder);
-		cPublic.moveToFirst();
-		if (cPublic.getCount() > 0) {
-			return true;
-		}
-
-		// Check private blacklist
-		Cursor cPrivate = context.managedQuery(Blacklist.PRIVATE_CONTENT_URI,
-				projection, selection, selectionArgs, sortOrder);
-		cPrivate.moveToFirst();
-		if (cPrivate.getCount() > 0) {
-			return true;
-		}
-
-		// not found
-		return false;
-	}
-
-	private String calcTypeText(int callLogType) {
-		switch (callLogType) {
-		case CallLog.Calls.INCOMING_TYPE:
-			return "I";
-		case CallLog.Calls.MISSED_TYPE:
-			return "M";
-		case CallLog.Calls.OUTGOING_TYPE:
-			return "O";
-		default:
-			return "U";
-		}
 	}
 
 }

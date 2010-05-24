@@ -1,14 +1,12 @@
 package no.smidsrod.robin.telefonterror;
 
+import java.util.Calendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import no.smidsrod.robin.telefonterror.blacklist.Blacklist;
-
+import no.smidsrod.robin.telefonterror.blacklist.BlacklistUpdater;
 import android.app.Activity;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -27,6 +25,17 @@ public class Main extends Activity implements OnClickListener {
 
 	public static void debug(String string) {
 		Log.d(APP_NAME, string);
+	}
+
+	public static String join(String[] array) {
+		if (array == null) {
+			return "null";
+		}
+		String result = "";
+		for (String s : array) {
+			result += s + ", ";
+		}
+		return result;
 	}
 
 	/** Called when the activity is first created. */
@@ -55,13 +64,11 @@ public class Main extends Activity implements OnClickListener {
 	}
 
 	private void viewCallLog() {
-		Main.debug("View call log button clicked!");
 		Intent intent = new Intent(this, CallList.class);
 		startActivity(intent);
 	}
 
 	private void updateBlacklist() {
-		Main.debug("Update blacklist button clicked!");
 		lastUpdatedText.setText(getResources().getString(
 				R.string.updating_blacklist));
 		final Handler uiThread = new Handler();
@@ -70,30 +77,23 @@ public class Main extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				// do something (in another thread)
-				doUpdateBlacklist();
+				int count = new BlacklistUpdater()
+						.updatePublic(getContentResolver());
+				Main.debug("Imported items: " + count);
+
 				// publish results in GUI thread
 				uiThread.post(new Runnable() {
 					@Override
 					public void run() {
-						lastUpdatedText.setText(getResources().getString(
-								R.string.blacklist_never_updated));
+						Calendar cal = Calendar.getInstance();
+						cal.setTimeInMillis(System.currentTimeMillis());
+						lastUpdatedText.setText(cal.getTime().toLocaleString());
 					}
 				});
 			}
 
 		};
 		updateThread.execute(updateTask);
-	}
-
-	private void doUpdateBlacklist() {
-		// ContentValues values = new ContentValues();
-		// values.put(Blacklist.NUMBER, "33301443");
-		// values.put(Blacklist.CATEGORY, "Butikk");
-		// values.put(Blacklist.URL, "http://www.expert.no");
-		// values.put(Blacklist.NAME, "Expert Tønsberg");
-		// Uri newUri =
-		// getContentResolver().insert(Blacklist.PRIVATE_CONTENT_URI, values);
-		// Main.debug("URI inserted: " + newUri);
 	}
 
 }
