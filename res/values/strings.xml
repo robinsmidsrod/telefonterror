@@ -8,4 +8,5 @@
 	<string name="main_title">TelefonTerror.no</string>
 	<string name="app_name">TelefonTerror.no</string>
 <string name="updating_blacklist">updating...</string>
+<string name="unknown_number">unknown</string>
 </resources>

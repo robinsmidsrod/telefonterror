@@ -3,4 +3,8 @@
 <color name="main_background">#AAAAAA</color>
 <color name="main_foreground">#660000</color>
 
+<color name="call_log_type_good">#00FF00</color>
+<color name="call_log_type_bad">#FF0000</color>
+<color name="call_log_type_unknown">#FFFF00</color>
+<color name="call_log_foreground">#000000</color>
 </resources>
